@@ -5,7 +5,7 @@ import (
 	"github.com/golang/glog"
 )
 
-type Handler struct {
+type BoltHandler struct {
 	name string
 	db   *bolt.DB
 }
@@ -20,16 +20,16 @@ var (
 	BUCKET_EXECUTOR_INFO = []byte("executor")
 )
 
-func New() *Handler {
+func NewBoltHandler() *BoltHandler {
 	db, err := bolt.Open(DB_NAME, 0600, nil)
 	if err != nil {
 		glog.Errorf("open db error,%v", err)
 	}
-	return &Handler{name: "my.db", db: db}
+	return &BoltHandler{name: DB_NAME, db: db}
 }
 
 // add or update k-v pair to the specify bucket
-func (h *Handler) Update(bucket, key, value []byte) error {
+func (h *BoltHandler) Update(bucket, key, value []byte) error {
 	err := h.db.Update(func(tx *bolt.Tx) error {
 		b, err := tx.CreateBucketIfNotExists(bucket)
 		if err != nil {
@@ -46,7 +46,7 @@ func (h *Handler) Update(bucket, key, value []byte) error {
 }
 
 // delete the k-v pair with the specify key
-func (h *Handler) Delete(bucket, key []byte) error {
+func (h *BoltHandler) Delete(bucket, key []byte) error {
 	err := h.db.Update(func(tx *bolt.Tx) error {
 		b, err := tx.CreateBucketIfNotExists(bucket)
 		if err != nil {
@@ -63,7 +63,7 @@ func (h *Handler) Delete(bucket, key []byte) error {
 }
 
 // if not exist, return nil
-func (h *Handler) Get(bucket, key []byte) ([]byte, error) {
+func (h *BoltHandler) Get(bucket, key []byte) ([]byte, error) {
 	var value []byte
 	err := h.db.View(func(tx *bolt.Tx) error {
 		b, err := tx.CreateBucketIfNotExists(bucket)
@@ -77,7 +77,7 @@ func (h *Handler) Get(bucket, key []byte) ([]byte, error) {
 	})
 	return value, err
 }
-func (h *Handler) Close() {
+func (h *BoltHandler) Close() {
 	glog.V(4).Infof("close bolt database")
 	h.db.Close()
 }
