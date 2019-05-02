@@ -4,23 +4,27 @@ import (
 	"github.com/tommenx/coordinator/pkg/db"
 )
 
-type coreClient struct {
+type CoreClient struct {
 	hanlder *db.EtcdHandler
 }
 
-func NewCoreClient() (*coreClient, error) {
-	endpoints := []string{"http://127.0.0.1:2379"}
-	handler, err := db.NewEtcdHandler(endpoints)
+func New(endpoonts []string) (*CoreClient, error) {
+	// endpoints := []string{"http://127.0.0.1:2379"}
+	handler, err := db.NewEtcdHandler(endpoonts)
 	if err != nil {
 		return nil, err
 	}
-	return &coreClient{hanlder: handler}, nil
+	return &CoreClient{hanlder: handler}, nil
 }
 
-func (c *coreClient) Node() NodeInfoInterface {
+func (c *CoreClient) Node() NodeInfoInterface {
 	return newNodeInfo(c.hanlder)
 }
 
-func (c *coreClient) Pod(ns string) PodInfoInterface {
+func (c *CoreClient) Pod(ns string) PodInfoInterface {
 	return NewPodInfo(c.hanlder, ns)
+}
+
+func (c *CoreClient) Executor() ExecutorInterafce {
+	return NewExecutor(c.hanlder)
 }

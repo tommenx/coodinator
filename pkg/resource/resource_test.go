@@ -55,11 +55,10 @@ import "testing"
 // }
 
 func TestNodeDelete(t *testing.T) {
-	client, _ := NewCoreClient()
+	client, _ := New()
 	node := &Node{
 		Name: "zx",
 	}
-	client.Node()
 	client.Node().Delete("zx")
 	if err := client.Node().Delete("zx"); err != nil {
 		if err != ErrKeyNotExist {

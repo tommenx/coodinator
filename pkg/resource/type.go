@@ -1,6 +1,10 @@
 package resource
 
-import "errors"
+import (
+	"errors"
+
+	cdpb "github.com/tommenx/pvproto/pkg/proto/coordinatorpb"
+)
 
 // scheduler send to coordinator when it need to scheduler
 
@@ -15,6 +19,11 @@ const (
 	LIMIT
 )
 
+var Type = map[cdpb.StorageType]ResourceType{
+	cdpb.StorageType_LIMIT:   LIMIT,
+	cdpb.StorageType_STORAGE: STORAGE,
+}
+
 const (
 	B ResourceUnit = iota
 	KB
@@ -23,11 +32,25 @@ const (
 	C
 )
 
+var Unit = map[cdpb.Unit]ResourceUnit{
+	cdpb.Unit_B:  B,
+	cdpb.Unit_KB: KB,
+	cdpb.Unit_MB: MB,
+	cdpb.Unit_GB: GB,
+	cdpb.Unit_C:  C,
+}
+
 const (
 	HDD StorageLevel = iota
 	SSD
 	NVM
 )
+
+var Level = map[cdpb.StorageLevel]StorageLevel{
+	cdpb.StorageLevel_HDD: HDD,
+	cdpb.StorageLevel_NVM: NVM,
+	cdpb.StorageLevel_SSD: SSD,
+}
 
 type Resource struct {
 	Type ResourceType `json:"type"`
@@ -52,7 +75,7 @@ type Device struct {
 }
 
 type PVC struct {
-	Name      string     `json:"name"`
+	Name      string     `json:"name"` // pvc-name
 	Resources []Resource `json:"resources"`
 }
 

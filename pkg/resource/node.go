@@ -14,6 +14,7 @@ type NodeInfoInterface interface {
 	Create(*Node) (*Node, error)
 	Update(*Node) (*Node, error)
 	Get(name string) (*Node, error)
+	GetAll() ([]*Node, error)
 	Delete(name string) error
 }
 
@@ -104,4 +105,11 @@ func (n *nodeInfo) Get(name string) (*Node, error) {
 		return nil, err
 	}
 	return node, nil
+}
+
+// TODO
+// complete get all function
+func (n *nodeInfo) GetAll() ([]*Node, error) {
+	var nodes []*Node
+	return nodes, nil
 }

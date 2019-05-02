@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"context"
@@ -107,12 +108,15 @@ func (h *EtcdHandler) Watch(folder, key string, addFunc func(k, v string), delFu
 		for wresp := range rch {
 			for _, ev := range wresp.Events {
 				glog.V(4).Infof("event:%s %q : %q\n", ev.Type, ev.Kv.Key, ev.Kv.Value)
-				log.Printf("event:%s %q : %q\n", ev.Type, ev.Kv.Key, ev.Kv.Value)
+				// log.Printf("event:%s %q : %q\n", ev.Type, ev.Kv.Key, ev.Kv.Value)
+				k := string(ev.Kv.Key)
+				v := string(ev.Kv.Value)
+				k = k[strings.LastIndex(k, "/")+1:]
 				switch ev.Type {
 				case v3.EventTypePut:
-					addFunc(string(ev.Kv.Key), string(ev.Kv.Value))
+					addFunc(k, v)
 				case v3.EventTypeDelete:
-					delFunc(string(ev.Kv.Key), string(ev.Kv.Value))
+					delFunc(k, v)
 				}
 			}
 		}
@@ -132,13 +136,11 @@ func (h *EtcdHandler) Register(folder, key, value string) error {
 			return e
 		case <-h.client.Ctx().Done():
 			return errors.New("server closed")
-		case ka, ok := <-ch:
+		case _, ok := <-ch:
 			if !ok {
 				glog.V(4).Infoln("etcd keep alive channel closed")
 				h.revoke(key)
 				return nil
-			} else {
-				glog.V(4).Infof("etcd reply from services:%s,ttl:%d", key, ka.TTL)
 			}
 		}
 	}
