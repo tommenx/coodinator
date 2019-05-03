@@ -69,6 +69,7 @@ func (h *EtcdHandler) Delete(folder, key string, strs ...string) error {
 	}
 	_, err := h.client.Delete(context.Background(), path, opts...)
 	if err != nil {
+		log.Printf("etcd put error,key = %s,error = %v", key, err)
 		glog.Errorf("etcd put error,key = %s,error = %v", key, err)
 		return err
 	}

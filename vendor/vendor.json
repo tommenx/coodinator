@@ -87,14 +87,16 @@
 			"revisionTime": "2019-04-22T05:37:40Z"
 		},
 		{
-			"checksumSHA1": "SAiEdrxXr5voB/Q89hUJQQfL89g=",
+			"checksumSHA1": "LjOD+1VAHRRGcJwD2cUCJt7UCGo=",
 			"path": "github.com/tommenx/pvproto/pkg/proto/coordinatorpb",
-			"revision": ""
+			"revision": "a99aa85f257e359b9e1f5b8350152ce298182452",
+			"revisionTime": "2019-05-02T14:01:25Z"
 		},
 		{
 			"checksumSHA1": "8m5/ZYVDWSLptr58PaCICVdc7WE=",
 			"path": "github.com/tommenx/pvproto/pkg/proto/executorpb",
-			"revision": ""
+			"revision": "a99aa85f257e359b9e1f5b8350152ce298182452",
+			"revisionTime": "2019-05-02T14:01:25Z"
 		},
 		{
 			"checksumSHA1": "8nCoO1ACxWgrtwUl84Se7YIWVMA=",

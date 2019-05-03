@@ -76,9 +76,9 @@ func (n *nodeInfo) Update(new *Node) (*Node, error) {
 }
 
 func (n *nodeInfo) Delete(name string) error {
-	if !n.ifExist(name) {
-		return ErrKeyNotExist
-	}
+	// if !n.ifExist(name) {
+	// 	return ErrKeyNotExist
+	// }
 	err := n.h.Delete(db.FOLDER_NODE_INFO, name)
 	if err != nil {
 		glog.Errorf("etcd delete key %s error", name)
@@ -107,9 +107,24 @@ func (n *nodeInfo) Get(name string) (*Node, error) {
 	return node, nil
 }
 
-// TODO
-// complete get all function
+// have not test
 func (n *nodeInfo) GetAll() ([]*Node, error) {
 	var nodes []*Node
+	kvs, err := n.h.Get(db.FOLDER_NODE_INFO, "", "prefix")
+	if err != nil {
+		glog.Errorf("etcd get node info error, err=%s", err)
+		return nodes, err
+	}
+
+	for k, v := range kvs {
+		node := &Node{}
+		err := json.Unmarshal([]byte(v), node)
+		if err != nil {
+			glog.Errorf("Unmarshal node error, key=%s, err=%v\n", k, err)
+			return nodes, err
+		}
+		// log.Printf("key=%s,val=%s\n", k, v)
+		nodes = append(nodes, node)
+	}
 	return nodes, nil
 }

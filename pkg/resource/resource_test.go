@@ -1,6 +1,10 @@
 package resource
 
-import "testing"
+import (
+	"fmt"
+	"log"
+	"testing"
+)
 
 // func TestNodeCreate(t *testing.T) {
 // 	client, err := NewCoreClient()
@@ -54,17 +58,55 @@ import "testing"
 // 	}
 // }
 
-func TestNodeDelete(t *testing.T) {
-	client, _ := New()
-	node := &Node{
-		Name: "zx",
+// func TestNodeDelete(t *testing.T) {
+// 	client, _ := New()
+// 	node := &Node{
+// 		Name: "zx",
+// 	}
+// 	client.Node().Delete("zx")
+// 	if err := client.Node().Delete("zx"); err != nil {
+// 		if err != ErrKeyNotExist {
+// 			t.Errorf("key %s have not deleted", node.Name)
+// 		}
+// 	} else {
+// 		t.Errorf("key %s have not deleted", node.Name)
+// 	}
+// }
+
+// func TestDeleteNode(t *testing.T) {
+// 	endpoints := []string{"127.0.0.1:2379"}
+// 	cli, _ := New(endpoints)
+// 	err1 := cli.Node().Delete("node1")
+// 	err2 := cli.Node().Delete("node2")
+// 	err3 := cli.Node().Delete("node3")
+// 	log.Printf("%v%v%v", err1, err2, err3)
+// }
+
+func TestNode(t *testing.T) {
+	endpoints := []string{"127.0.0.1:2379"}
+	cli, _ := New(endpoints)
+	nodes := []Node{
+		{
+			Name: "node1",
+		},
+		{
+			Name: "node2",
+		},
+		{
+			Name: "node3",
+		},
 	}
-	client.Node().Delete("zx")
-	if err := client.Node().Delete("zx"); err != nil {
-		if err != ErrKeyNotExist {
-			t.Errorf("key %s have not deleted", node.Name)
-		}
-	} else {
-		t.Errorf("key %s have not deleted", node.Name)
+	for _, node := range nodes {
+		cli.Node().Create(&node)
 	}
+	got, _ := cli.Node().GetAll()
+	log.Printf("len is %d", len(got))
+	for _, v := range got {
+		fmt.Printf("%+v\n", v)
+	}
+
+	for _, node := range nodes {
+		cli.Node().Delete(node.Name)
+	}
+
 }

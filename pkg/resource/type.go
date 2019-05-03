@@ -24,6 +24,11 @@ var Type = map[cdpb.StorageType]ResourceType{
 	cdpb.StorageType_STORAGE: STORAGE,
 }
 
+var ReType = map[ResourceType]cdpb.StorageType{
+	LIMIT:   cdpb.StorageType_LIMIT,
+	STORAGE: cdpb.StorageType_STORAGE,
+}
+
 const (
 	B ResourceUnit = iota
 	KB
@@ -40,6 +45,14 @@ var Unit = map[cdpb.Unit]ResourceUnit{
 	cdpb.Unit_C:  C,
 }
 
+var ReUnit = map[ResourceUnit]cdpb.Unit{
+	B:  cdpb.Unit_B,
+	KB: cdpb.Unit_KB,
+	MB: cdpb.Unit_MB,
+	GB: cdpb.Unit_GB,
+	C:  cdpb.Unit_C,
+}
+
 const (
 	HDD StorageLevel = iota
 	SSD
@@ -52,6 +65,12 @@ var Level = map[cdpb.StorageLevel]StorageLevel{
 	cdpb.StorageLevel_SSD: SSD,
 }
 
+var ReLeval = map[StorageLevel]cdpb.StorageLevel{
+	HDD: cdpb.StorageLevel_HDD,
+	SSD: cdpb.StorageLevel_SSD,
+	NVM: cdpb.StorageLevel_NVM,
+}
+
 type Resource struct {
 	Type ResourceType `json:"type"`
 	Kind string       `json:"kind"`
@@ -62,7 +81,7 @@ type Resource struct {
 type Storage struct {
 	Name      string       `json:"name"` // vg
 	Level     StorageLevel `json:"level"`
-	Resources []Resource   `json:"resources"`
+	Resources []*Resource  `json:"resources"`
 }
 
 type Device struct {
@@ -75,30 +94,30 @@ type Device struct {
 }
 
 type PVC struct {
-	Name      string     `json:"name"` // pvc-name
-	Resources []Resource `json:"resources"`
+	Name      string      `json:"name"` // pvc-name
+	Resources []*Resource `json:"resources"`
 }
 
 type PV struct {
-	Name   string `json:"name"`
-	Device Device `json:"device"`
+	Name   string  `json:"name"`
+	Device *Device `json:"device"`
 }
 
 type Allocation struct {
-	PVC PVC `json:"pvc"`
-	PV  PV  `json:"pv"`
+	PVC *PVC `json:"pvc"`
+	PV  *PV  `json:"pv"`
 }
 
 type Pod struct {
-	Node        string       `json:"node"`
-	Name        string       `json:"name"`
-	Namespace   string       `json:"namespace"`
-	Allocations []Allocation `json:"allocation"`
+	Node        string        `json:"node"`
+	Name        string        `json:"name"`
+	Namespace   string        `json:"namespace"`
+	Allocations []*Allocation `json:"allocation"`
 }
 
 type Node struct {
-	Name     string    `json:"name"`
-	Storages []Storage `json:"storages"`
+	Name     string     `json:"name"`
+	Storages []*Storage `json:"storages"`
 }
 
 type Executor struct {
