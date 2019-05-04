@@ -3,7 +3,6 @@ package resource
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 
 	"github.com/golang/glog"
 
@@ -36,11 +35,10 @@ func (n *nodeInfo) Create(node *Node) (*Node, error) {
 		return nil, err
 	}
 	nodeName := node.Name
-	if n.ifExist(nodeName) {
-		glog.Errorf("etcd create,key %s already exist", node.Name)
-		return nil, ErrKeyAlreadyExist
-	}
-	log.Printf("%v\n", string(buf))
+	// if n.ifExist(nodeName) {
+	// 	glog.Errorf("etcd create,key %s already exist", node.Name)
+	// 	return nil, ErrKeyAlreadyExist
+	// }
 	err = n.h.Put(db.FOLDER_NODE_INFO, nodeName, string(buf))
 	if err != nil {
 		glog.Errorf("etcd put k-v error,key = %s", nodeName)

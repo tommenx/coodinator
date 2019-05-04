@@ -39,10 +39,11 @@ func (n *podInfo) Create(pod *Pod) (*Pod, error) {
 		ns = "default"
 	}
 	key := fmt.Sprintf("%s/%s", ns, name)
-	if n.ifExist(key) {
-		glog.Errorf("etcd create,namespace = %s,key = %s already exist", ns, name)
-		return nil, ErrKeyAlreadyExist
-	}
+	// glog.V(4).Infof("create pod key=%s,val = %s", key, string(buf))
+	// if n.ifExist(key) {
+	// 	glog.Errorf("etcd create,namespace = %s,key = %s already exist", ns, name)
+	// 	return nil, ErrKeyAlreadyExist
+	// }
 	err = n.h.Put(db.FOLDER_POD_INFO, key, string(buf))
 	if err != nil {
 		glog.Errorf("etcd pu key error,key = %s", key)
@@ -77,7 +78,7 @@ func (n *podInfo) Update(pod *Pod) (*Pod, error) {
 		glog.Errorf("marshal json error,%v", err)
 		return nil, err
 	}
-	err = n.h.Put(db.FOLDER_NODE_INFO, key, string(buf))
+	err = n.h.Put(db.FOLDER_POD_INFO, key, string(buf))
 	if err != nil {
 		glog.Errorf("etcd update k-v error,key = %s", key)
 		return nil, err
@@ -88,7 +89,7 @@ func (n *podInfo) Update(pod *Pod) (*Pod, error) {
 func (n *podInfo) Get(name string) (*Pod, error) {
 	ns := n.ns
 	key := fmt.Sprintf("%s/%s", ns, name)
-	kvs, err := n.h.Get(db.FOLDER_NODE_INFO, key)
+	kvs, err := n.h.Get(db.FOLDER_POD_INFO, key)
 	if err != nil {
 		glog.Errorf("etcd get key %s error", key)
 		return nil, err

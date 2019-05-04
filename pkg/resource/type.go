@@ -86,7 +86,7 @@ type Storage struct {
 
 type Device struct {
 	Id          string `json:"id"`
-	Name        string `json:"name"`
+	Name        string `json:"name"` //lv name
 	Maj         string `json:"maj"`
 	Min         string `json:"min"`
 	VolumeGroup string `json:"volume_group"` //来源于Storage中的name
