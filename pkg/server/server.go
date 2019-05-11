@@ -6,6 +6,7 @@ import (
 
 	"github.com/golang/glog"
 
+	"github.com/tommenx/coordinator/pkg/kube"
 	"github.com/tommenx/coordinator/pkg/resource"
 	"github.com/tommenx/coordinator/pkg/util"
 	cdpb "github.com/tommenx/pvproto/pkg/proto/coordinatorpb"
@@ -116,8 +117,7 @@ func (s *Server) PutNodeResource(ctx context.Context, req *cdpb.PutNodeResourceR
 
 // executor -> coordinator
 // TODO
-// use podName to find pvc then get pv
-// have not write to ectd
+// don't know how to find unbounded pod
 func (s *Server) PutPV(ctx context.Context, req *cdpb.PutPVRequest) (*cdpb.PutPVResponse, error) {
 	rsp := &cdpb.PutPVResponse{}
 	rsp.Header = &cdpb.ResponseHeader{
@@ -135,51 +135,76 @@ func (s *Server) PutPV(ctx context.Context, req *cdpb.PutPVRequest) (*cdpb.PutPV
 		},
 	}
 
-	podName, pvcName := findPodForPV(pv.Name)
-
-	pod, _ := s.c.Pod("default").Get(podName)
-	for _, v := range pod.Allocations {
-		if v.PVC.Name == pvcName {
-			v.PV = pv
-		}
-	}
-	_, err := s.c.Pod("default").Update(pod)
+	pods, err := s.c.Pod("").GetAll()
 	if err != nil {
-		glog.Errorf("update pod pv error, err=%v", err)
+		glog.Errorf("get all pods error,err=%v", err)
+		rsp.Header.Error.Type = cdpb.ErrorType_INTERNAL_ERROR
+		rsp.Header.Error.Message = fmt.Sprintf("get all pods error,err=%v", err)
+		return rsp, nil
 	}
-	pod, _ = s.c.Pod("default").Get(podName)
-	for _, item := range pod.Allocations {
-		if item.PV != nil {
-			glog.V(4).Infoln(item.PV.Name)
-			glog.V(4).Infoln(*item.PV.Device)
-			glog.V(4).Infoln(item.PVC.Name)
+	// _, err = s.c.Pod("default").Update(pod)
+	// if err != nil {
+	// 	glog.Errorf("update pod pv error, err=%v", err)
+	// }
+	pod := s.updateAndGetPod(pv.Name, pods)
+	if pod == nil {
+		rsp.Header.Error.Type = cdpb.ErrorType_INTERNAL_ERROR
+		rsp.Header.Error.Message = "do not find pod"
+		return rsp, nil
+	}
+
+	for _, a := range pod.Allocations {
+		if a.PV.Name == pv.Name {
+			a.PV = pv
+			break
 		}
-
 	}
-
+	_, err = s.c.Pod(pod.Namespace).Update(pod)
+	if err != nil {
+		rsp.Header.Error.Type = cdpb.ErrorType_INTERNAL_ERROR
+		rsp.Header.Error.Message = fmt.Sprintf("pod update error,err=%v,name=%s", err, pod.Name)
+		return rsp, nil
+	}
+	// update succsss
+	glog.V(4).Infof("update pv success, pod=%s, pv=%s", pod.Name, pv.Name)
 	rsp.Header.Error.Type = cdpb.ErrorType_OK
 	rsp.Header.Error.Message = "success"
 	return rsp, nil
 }
 
-// input  PV name
-// output pod name
-func findPodForPV(name string) (string, string) {
-	var pvc string
-	var pod string
-	for k, v := range pvcpv {
-		if v == name {
-			pvc = k
-			break
+func (s *Server) updateAndGetPod(name string, pods []*resource.Pod) *resource.Pod {
+	var findPod *resource.Pod
+	for _, p := range pods {
+		for i, item := range p.Allocations {
+			// 如果pv为空，说明没有绑定pv
+			if item.PV == nil {
+				if item.PVC != nil {
+					//  未设置重试
+					if pvname, err := kube.GetBoundedPVByPVC(p.Namespace, item.PVC.Name); err != nil {
+						p.Allocations[i].PV.Name = pvname
+						_, err := s.c.Pod(p.Namespace).Update(p)
+						if err != nil {
+							glog.Errorf("put pv update pv name error,err=%v", err)
+							continue
+						}
+						if pvname == name {
+							findPod = p
+							return findPod
+						}
+					}
+				}
+			} else {
+				// 只需要校验名字
+				if item.PV.Name == name {
+					findPod = p
+					return findPod
+				}
+
+			}
+
 		}
 	}
-	for k, v := range podpvc {
-		if v == pvc {
-			pod = k
-			break
-		}
-	}
-	return pod, pvc
+	return nil
 }
 
 func (s *Server) PutPodNodeInfo(ctx context.Context, req *cdpb.PutPodNodeInfoRequest) (*cdpb.PutPodNodeInfoResponse, error) {

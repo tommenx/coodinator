@@ -13,6 +13,7 @@ type PodInfoInterface interface {
 	Delete(name string) error
 	Update(*Pod) (*Pod, error)
 	Get(name string) (*Pod, error)
+	GetAll() ([]*Pod, error)
 }
 
 type podInfo struct {
@@ -106,6 +107,24 @@ func (n *podInfo) Get(name string) (*Pod, error) {
 		return nil, err
 	}
 	return pod, nil
+}
+
+func (n *podInfo) GetAll() ([]*Pod, error) {
+	var pods []*Pod
+	kvs, err := n.h.Get(db.FOLDER_POD_INFO, "", "prefix")
+	if err != nil {
+		glog.Errorf("get all pods error,err=%v", err)
+		return pods, err
+	}
+	for _, v := range kvs {
+		pod := &Pod{}
+		err = json.Unmarshal([]byte(v), pod)
+		if err != nil {
+			return pods, err
+		}
+		pods = append(pods, pod)
+	}
+	return pods, nil
 }
 
 // namespace/podname

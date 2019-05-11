@@ -23,7 +23,7 @@ var conns map[string]pb.ExecutorClient
 
 func main() {
 	flag.Parse()
-	client, err := resource.New()
+	client, err := resource.New([]string{"127.0.0.1:2379"})
 	if err != nil {
 		glog.Errorf("new client error")
 	}
@@ -46,12 +46,29 @@ func main() {
 			Header: &pb.RequestHeader{
 				NodeId: "client",
 			},
+			Deivice: &pb.Device{
+				Maj: 1,
+				Min: 2,
+				Id:  "id1",
+			},
 			Resource: []*pb.Resource{
 				&pb.Resource{
 					Type: pb.StorageType_STORAGE,
 					Kind: "size",
 					Size: uint64(1000),
 					Unit: pb.Unit_B,
+				},
+				&pb.Resource{
+					Type: pb.StorageType_LIMIT,
+					Kind: "throttle.write_bps_device",
+					Size: 10,
+					Unit: pb.Unit_MB,
+				},
+				&pb.Resource{
+					Type: pb.StorageType_LIMIT,
+					Kind: "throttle.read_iops_device",
+					Size: 20,
+					Unit: pb.Unit_MB,
 				},
 			},
 		})

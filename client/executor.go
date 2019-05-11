@@ -9,35 +9,11 @@ import (
 	"github.com/golang/glog"
 	"google.golang.org/grpc"
 
+	"github.com/tommenx/coordinator/pkg/isolate"
 	"github.com/tommenx/coordinator/pkg/resource"
-	pb "github.com/tommenx/pvproto/pkg/proto/executorpb"
+	"github.com/tommenx/coordinator/pkg/util"
+	ecpb "github.com/tommenx/pvproto/pkg/proto/executorpb"
 )
-
-// func main() {
-// 	ServerAddr := "127.0.0.1:50051"
-// 	conn, err := grpc.Dial(ServerAddr, grpc.WithInsecure())
-// 	if err != nil {
-// 		log.Fatal("error")
-// 	}
-// 	c := ecpb.NewExecutorClient(conn)
-// 	res, err := c.PutIsolation(context.Background(), &ecpb.PutIsolationRequest{
-// 		Header: &ecpb.RequestHeader{
-// 			NodeId: "client",
-// 		},
-// 		Resource: []*ecpb.Resource{
-// 			&ecpb.Resource{
-// 				Type: ecpb.StorageType_STORAGE,
-// 				Kind: "size",
-// 				Size: uint64(1000),
-// 				Unit: ecpb.Unit_B,
-// 			},
-// 		},
-// 	})
-// 	if err != nil {
-// 		log.Printf("error,%v", err)
-// 	}
-// 	log.Printf("res:%v", res)
-// }
 
 type server struct{}
 
@@ -55,17 +31,38 @@ func init() {
 
 }
 
-func (s *server) PutIsolation(ctx context.Context, req *pb.PutIsolationRequest) (*pb.PutIsolationResponse, error) {
-	glog.V(4).Infof("get req %+v\n", req)
-	return &pb.PutIsolationResponse{
-		Header: &pb.ResponseHeader{
-			NodeId: nodeId,
-			Error: &pb.Error{
-				Type:    pb.ErrorType_OK,
-				Message: "success",
-			},
+func (s *server) PutIsolation(ctx context.Context, req *ecpb.PutIsolationRequest) (*ecpb.PutIsolationResponse, error) {
+	rsp := &ecpb.PutIsolationResponse{
+		Header: &ecpb.ResponseHeader{
+			Error: &ecpb.Error{},
 		},
-	}, nil
+	}
+	glog.V(4).Infof("get req %+v\n", req)
+	device := req.Deivice
+	limits := req.Resource
+	settings := []*isolate.BlkioSetting{}
+	for _, limit := range limits {
+		if limit.Type == ecpb.StorageType_STORAGE {
+			continue
+		}
+		setting := &isolate.BlkioSetting{
+			Type:  limit.Kind,
+			Maj:   device.Maj,
+			Min:   device.Min,
+			Count: util.ToCount(int64(limit.Size), limit.Unit),
+		}
+		settings = append(settings, setting)
+	}
+	tempPath := "/Users/tommenx/Desktop/cgroup"
+	err := isolate.NewBlkio(tempPath).Update(isolate.DefaultDir, settings)
+	if err != nil {
+		rsp.Header.Error.Type = ecpb.ErrorType_INTERNAL_ERROR
+		rsp.Header.Error.Message = fmt.Sprintf("update blkio error,err=%v", err)
+	}
+	rsp.Header.Error.Type = ecpb.ErrorType_OK
+	rsp.Header.Error.Message = "success"
+	return rsp, nil
+
 }
 
 func main() {
@@ -76,9 +73,9 @@ func main() {
 		glog.Error("listen error")
 	}
 	s := grpc.NewServer()
-	pb.RegisterExecutorServer(s, &server{})
+	ecpb.RegisterExecutorServer(s, &server{})
 	// register to etcd
-	client, err := resource.New()
+	client, err := resource.New([]string{"127.0.0.1:2379"})
 	if err != nil {
 		glog.Errorf("create resource client error, err=%v", err)
 	}

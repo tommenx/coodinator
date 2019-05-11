@@ -18,7 +18,8 @@ type kubeClient struct {
 func newKubeClient() *kubeClient {
 	var cfg *rest.Config
 	var err error
-	cPath := "/Users/tommenx/.kube/config"
+	// cPath := "/Users/tommenx/.kube/config"
+	cPath := "/root/.kube/config"
 	if cPath != "" {
 		cfg, err = clientcmd.BuildConfigFromFlags("", cPath)
 		if err != nil {
