@@ -1,0 +1,23 @@
+[[disk]]
+name = "ssd1"
+type = "ssd"
+size = 300
+bandwidth = 102400
+
+[[disk]]
+name = "ssd2"
+type = "ssd"
+size = 200
+bandwidth = 102400
+
+[[disk]]
+name = "hdd1"
+type = "hdd"
+size = 1000
+bandwidth = 102400
+
+[[disk]]
+name = "hdd2"
+type = "hdd"
+size = 2000
+bandwidth = 51200
